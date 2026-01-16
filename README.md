@@ -7,9 +7,9 @@ A Bitcoin DCA (Dollar Cost Averaging) strategy model with comprehensive backtest
 This project computes dynamic investment weights for Bitcoin DCA strategies, adjusting daily allocations based on:
 - **MVRV Z-score**: Buy more when undervalued (low MVRV)
 - **Price vs 200-day MA**: Buy more when price is below long-term trend
-- **4-year Halving Cycle Percentile**: Context from Bitcoin's halving cycle
-- **MVRV Momentum**: Acceleration/deceleration of MVRV trends
+- **MVRV Acceleration**: Second derivative for momentum detection
 - **Signal Confidence**: Amplify signals when multiple indicators agree
+- **Volatility Dampening**: Reduce exposure during high uncertainty periods
 
 ## Repository Structure
 
@@ -18,13 +18,15 @@ This project computes dynamic investment weights for Bitcoin DCA strategies, adj
 ├── model_development.py    # Core model logic and weight computation
 ├── backtest.py            # Backtesting framework and visualization
 ├── prelude.py             # Data loading and backtest utilities
-├── model.md               # Model documentation
-├── model_backtest.md      # Backtest documentation
 ├── requirements.txt       # Python dependencies
+├── docs/                  # Documentation
+│   ├── model.md           # Model documentation
+│   └── model_backtest.md  # Backtest documentation
 ├── data/                  # Data directory
 │   ├── download_data.py   # Data download script
 │   ├── Coin Metrics/      # CoinMetrics BTC data
 │   └── Polymarket/        # Polymarket data
+├── output/                # Generated outputs and visualizations
 └── tests/                  # Test suite
 ```
 
@@ -64,8 +66,8 @@ All data needed for this capstone can be accessed via:
 [Capstone Data Google Drive](https://drive.google.com/drive/folders/1gizJ_n-QCnE8qrFM-BU3J_ZpaR3HCjn7?usp=sharing)
 
 Download the data and place it in the `data/` directory, preserving the subfolder structure:
-- `data/Coin Metrics/` - CoinMetrics BTC data
-- `data/Polymarket/` - Polymarket data files
+- `data/Coin Metrics/` - CoinMetrics BTC data (includes `coinmetrics_btc.csv` and `coinmetrics_spec.md` data specification)
+- `data/Polymarket/` - Polymarket data files (5 parquet files and `polymarket_btc_analytics_schema.md` schema documentation)
 
 ## Usage
 
@@ -135,8 +137,8 @@ The test suite includes:
 
 ## Documentation
 
-- **Model Documentation**: See `model.md` for detailed explanation of the weight computation model
-- **Backtest Documentation**: See `model_backtest.md` for backtesting framework details
+- **Model Documentation**: See `docs/model.md` for detailed explanation of the weight computation model
+- **Backtest Documentation**: See `docs/model_backtest.md` for backtesting framework details
 
 ## Key Features
 
@@ -145,6 +147,15 @@ The test suite includes:
 - **No Forward-Looking Bias**: All features are lagged to prevent information leakage
 - **Weight Stability**: Past weights are locked and never change as new data arrives
 - **Performance Metrics**: Win rate, SPD percentile, and exponential-decay scoring
+
+## Capstone Objective
+
+The capstone objective is to extend the current MVRV-based DCA model by incorporating Polymarket prediction market data for enhanced signal generation:
+
+- **Polymarket Integration**: Leverage prediction market data from Polymarket (available in `data/Polymarket/`) to incorporate sentiment and probabilistic market expectations into the DCA strategy. This could include:
+  - Election outcome probabilities affecting BTC price expectations
+  - Economic indicator predictions influencing volatility assessments
+  - Cryptocurrency-specific market sentiment from prediction markets
 
 ## Requirements
 

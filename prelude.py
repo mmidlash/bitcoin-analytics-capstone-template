@@ -33,17 +33,17 @@ WEIGHT_SUM_TOLERANCE = 1e-5
 
 def load_data():
     """Load BTC data from CoinMetrics CSV.
-    
+
     Loads from local file: data/Coin Metrics/coinmetrics_btc.csv
     """
     local_path = Path("data/Coin Metrics/coinmetrics_btc.csv")
-    
+
     if not local_path.exists():
         raise FileNotFoundError(
             f"CoinMetrics BTC data file not found at {local_path}. "
             "Please ensure the file exists in the data/Coin Metrics/ directory."
         )
-    
+
     logging.info(f"Loading CoinMetrics BTC data from local file: {local_path}")
     df = pd.read_csv(local_path)
 
@@ -69,7 +69,9 @@ def load_data():
     ]
     missing_prices = df.loc[backtest_dates, "PriceUSD_coinmetrics"].isnull()
     if missing_prices.any():
-        first_missing = df.loc[backtest_dates, "PriceUSD_coinmetrics"][missing_prices].index.min()
+        first_missing = df.loc[backtest_dates, "PriceUSD_coinmetrics"][
+            missing_prices
+        ].index.min()
         logging.warning(
             f"Missing BTC-USD prices for {missing_prices.sum()} dates from {BACKTEST_START} to {latest_date.date()}. "
             f"First missing date: {first_missing.date()}"

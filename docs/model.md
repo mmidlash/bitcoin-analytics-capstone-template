@@ -172,21 +172,54 @@ mvrv_acceleration = tanh(accel_raw.ewm(span=14).mean() * 3)
 
 ### MVRV Volatility
 
-Rolling volatility for uncertainty detection:
+Rolling volatility percentile for uncertainty detection:
 
 ```python
-mvrv_volatility = percentile_rank(mvrv_zscore.rolling(90).std())
-# Result in [0, 1] where 1 = high volatility
+def compute_mvrv_volatility(mvrv_zscore, window=90):
+    # Compute rolling standard deviation
+    vol = mvrv_zscore.rolling(window, min_periods=window//4).std()
+
+    # Compute percentile rank over 4x longer window (360 days)
+    # For each point, what percentile is current volatility in historical distribution?
+    vol_pct = vol.rolling(window * 4, min_periods=window).apply(
+        lambda x: (x.iloc[-1] > x[:-1]).sum() / max(len(x) - 1, 1)
+        if len(x) > 1 else 0.5,
+        raw=False,
+    )
+
+    return vol_pct.fillna(0.5)
+# Result in [0, 1] where 1 = high volatility relative to history
 ```
 
 ### Signal Confidence
 
-Measures agreement between signals:
+Computes confidence based on signal agreement and gradient alignment:
 
 ```python
-# When Z-score and MA signals agree → confidence ≈ 1
-# When signals disagree → confidence ≈ 0
-signal_confidence = agreement * 0.7 + gradient_alignment * 0.3
+def compute_signal_confidence(mvrv_zscore, mvrv_gradient, price_vs_ma):
+    # Normalize all signals to [-1, 1] where negative = buy signal
+    z_signal = -mvrv_zscore / 4  # Scale to [-1, 1]
+    ma_signal = -price_vs_ma     # Below MA = buy signal
+
+    # Gradient alignment: does gradient confirm the buy/sell direction?
+    # Buy signals + rising gradient = confirmation (1.0)
+    # Buy signals + falling gradient = divergence (0.5)
+    gradient_alignment = np.where(
+        z_signal < 0,  # Buy signal from Z-score
+        np.where(mvrv_gradient > 0, 1.0, 0.5),  # Rising = confirmation
+        np.where(mvrv_gradient < 0, 1.0, 0.5),  # Falling = confirmation for sell
+    )
+
+    # Agreement: how much do Z-score and MA signals agree?
+    signals = np.stack([z_signal, ma_signal], axis=0)
+    signal_std = signals.std(axis=0)
+    max_std = 1.0  # Maximum possible std when signals fully disagree
+    agreement = 1.0 - np.clip(signal_std / max_std, 0, 1)
+
+    # Combine: 70% agreement, 30% gradient alignment
+    confidence = agreement * 0.7 + gradient_alignment * 0.3
+
+    return np.clip(confidence, 0, 1)
 ```
 
 ### Look-Ahead Bias Prevention
@@ -256,7 +289,7 @@ def compute_dynamic_multiplier(...):
     combined *= volatility_dampening   # [0.8, 1.0] only if volatility > 0.8
     
     # 5. Scale and exponentiate
-    adjustment = clip(combined * DYNAMIC_STRENGTH, -4, 4)
+    adjustment = clip(combined * DYNAMIC_STRENGTH, -5, 100)
     return exp(adjustment)
 ```
 
@@ -326,7 +359,7 @@ def compute_window_weights(features_df, start_date, end_date, current_date) -> p
 | MVRV_ROLLING_WINDOW | 365 | Window for MVRV Z-score normalization |
 | MVRV_ACCEL_WINDOW | 14 | Window for acceleration calculation |
 | MVRV_VOLATILITY_WINDOW | 90 | Window for volatility calculation |
-| DYNAMIC_STRENGTH | 3.0 | Weight adjustment multiplier |
+| DYNAMIC_STRENGTH | 5.0 | Weight adjustment multiplier |
 | MVRV_VOLATILITY_DAMPENING | 0.2 | Max dampening in extreme volatility |
 
 ### MVRV Zone Thresholds
