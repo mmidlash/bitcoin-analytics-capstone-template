@@ -7,6 +7,7 @@ This document explains the backtesting framework in `template/backtest_template.
 The backtest system validates the dynamic DCA strategy by comparing its performance against uniform DCA (equal daily allocations) across rolling 1-year investment windows from 2018-01-01 to the present.
 
 **Key Metrics:**
+
 - **Win Rate**: Percentage of windows where dynamic DCA outperforms uniform DCA
 - **SPD Percentile**: Sats-per-dollar percentile within each window's min/max range
 - **Model Score**: Combined metric (50% win rate + 50% exponential-decay percentile)
@@ -77,6 +78,7 @@ _FEATURES_DF = precompute_features(btc_df)
 ```
 
 Features include:
+
 - `price_vs_ma`: Distance from 200-day moving average
 - `mvrv_zscore`: MVRV Z-score (365-day window)
 - `mvrv_gradient`: Trend direction (30-day EMA)
@@ -115,7 +117,6 @@ percentile = (spd - min_spd) / (max_spd - min_spd) × 100
 ```
 
 - **0%**: Worst possible timing (bought at highest prices)
-- **50%**: Uniform DCA baseline
 - **100%**: Perfect timing (bought at lowest prices)
 
 ## Interpreting Results
@@ -192,6 +193,7 @@ window
 ```
 
 **Common patterns in underperforming windows:**
+
 - Bear market entries (2018-2019): Model's value signals trigger too early
 - Late-cycle windows (2023-2024): Model may reduce buying before final leg up
 
@@ -251,6 +253,7 @@ python -m template.backtest_template
 ```
 
 The script will:
+
 1. Load BTC data with today's live price
 2. Precompute all model features
 3. Run SPD backtest across all rolling windows
@@ -288,6 +291,7 @@ df_spd, exp_decay_percentile = backtest_dynamic_dca(
 ### `check_strategy_submission_ready(dataframe, strategy_function)`
 
 Comprehensive validation for production readiness:
+
 - Forward-leakage test (no future data used)
 - Weight validation (non-negative, sum to 1.0)
 - Performance check (≥50% win rate vs uniform DCA)
@@ -305,6 +309,7 @@ Based on the current backtest results:
 | Exp-Decay Percentile | 56.21% | > 50% |
 
 The strategy consistently outperforms uniform DCA with:
+
 - **64.45% win rate** (1,646 wins / 908 losses)
 - **11% relative improvement** on average
 - **Stronger recent performance** (exp-decay average: 56.21%)
