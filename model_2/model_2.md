@@ -345,15 +345,12 @@ The Model 2 score (59.51%) is nearly identical to Example 1 (59.54%). This refle
 
 ## Running the Model
 
-**Train the RF (run once; auto-triggered by run_backtest if pkl absent):**
-```bash
-python -m model_2.training_pipeline
-```
-
 **Run the full backtest:**
 ```bash
 python -m model_2.run_backtest
 ```
+
+> On first run, this trains the Random Forest (`rf_model.pkl`) and then runs the full backtest. To retrain the RF only: `python -m model_2.training_pipeline`.
 
 **Outputs in `model_2/output/`:**
 ```
